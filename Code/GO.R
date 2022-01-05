@@ -19,13 +19,13 @@ secday=60*60*24 # seconds in day
 # FILENAMES
 # *** 
 # These will need to be adjusted 
-# to match the local file system
+# if the files are not stored in ../Data
 # *** 
 # # # # # # # # # # # # # # # # # # # # # # # 
-din<-"C:/Users/Admin/Desktop/Modelling/Data/"
-hyps_name<-paste(din,"stor_hyps.csv",sep="")
-met_name<-paste(din,"met.csv",sep="")
-val_name<-paste(din,"AnnMB.csv",sep="")
+setwd("../Data")
+hyps_name<-paste("stor_hyps.csv",sep="")
+met_name<-paste("met.csv",sep="")
+val_name<-paste("AnnMB.csv",sep="")
 # # # # # # # # # # # # # # # # # # # # # # # 
 
 # # # # # # # # # # # # # # 

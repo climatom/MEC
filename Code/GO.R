@@ -156,7 +156,7 @@ runoff<-function(q,r){
 
 # Storglaciaren hypsometry: z_m | area_m2
 hyps<-read.csv(hyps_name)
-z<-hyps$ï..z_m
+z<-hyps$z_m
 z<-z[hyps$area_m2>0]
 ne<-length(z)
 totArea<-sum(hyps$area_m2)
@@ -265,7 +265,7 @@ for(y in seq(19500901,20190901,10000)){
 }
 
 # 1951-2018 correlation with obs?
-obs<-val$MBs[val$ï..year>1950]
+obs<-val$MBs[val$year>1950]
 sim<-annMB[yrs<2019]
 plot(sim,obs)
 r<-cor(sim,obs) 

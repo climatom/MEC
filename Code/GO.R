@@ -19,10 +19,17 @@ secday=60*60*24 # seconds in day
 # FILENAMES
 # *** 
 # These will need to be adjusted 
-# if the files are not stored in ../Data
+# if the repo is cloned to your
+# local machine -- in which case
+# you should ensure the argument 
+# to setwd (i.e., the bit in brackets)
+# points to the directory holding the 
+# data
 # *** 
 # # # # # # # # # # # # # # # # # # # # # # # 
-setwd("../Data")
+setwd("Data") # Change this to the absolute 
+# path for your data *IF* running on your
+# own machine. 
 hyps_name<-paste("stor_hyps.csv",sep="")
 met_name<-paste("met.csv",sep="")
 val_name<-paste("AnnMB.csv",sep="")

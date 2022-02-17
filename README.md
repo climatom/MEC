@@ -2,7 +2,7 @@
 
 ## Instructions 
 
-* To use these resources on your own computer, please download and unzip this repository. You will then need to (a) unzip, and (b) edit some file paths to read from different directories. Further details will be provided for specific sessions. 
+* To use these resources on your own computer, please download this repository. You will then need to (a) unzip, and (b) edit some file paths to read from different directories. Further details can be provided if needed. 
 * To use these resources on a web server, just follow the instructions in the section below. 
 
 ### Glacier mass balance model 

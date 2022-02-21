@@ -33,11 +33,14 @@ hist_stop<-"2010-12-31"
 proj_start<-"1989-03-31"
 spin_up_end<-"1990-08-30"
 proj_end<-"2100-12-31"
+mean_start<-as.Date(spin_up_end) %m-%months(12) +1 # Start date for mean comps
 
 # # # # # # # # # # # # # # 
 # File names / Parse input
 # # # # # # # # # # # # # # 
-setwd("Data")
+if (!grepl("Data",getwd())){
+  setwd("Data") 
+}
 #setwd("C:/Users/Admin/Documents/MEC/Data/") # Change this to the absolute 
 # path --  e.g., /Users/tommatthews/Documents/MEC/Data *IF* running on your own 
 # machine. 
@@ -283,12 +286,12 @@ for (i in 1:nt){
   # Update days since last snow
   dtsnowiz_last<-days_since(snowiz[i,],dtsnowiz_last)
   
-  # Accumulate T and P, plus increment the counters (so long as we're through
-  # the spin-up period)
-  if (met_all$date[i]>=spin_up_end){
+  # Accumulate T and P, plus increment the counters
+  if (met_all$date[i]>=mean_start){
     totT<-totT+met_all$t[i]
     totP<-totP+met_all$p[i]
     nd<-nd+1 # Increment number of days here. 
+    # [1] "2024-08-01"
   }
   
   # If today is end of summer (and it's not the spin-up period)
@@ -365,6 +368,7 @@ for (i in 1:nt){
     annArea[k]<-totArea
     annT[k]<-totT/nd
     annP[k]<-totP/nd 
+    print(nd)
     
     # Increment counter
     k<-k+1
@@ -380,7 +384,7 @@ for (i in 1:nt){
     
   }
 }
-
+annframe<-data.frame("year"=yrs,"area"=annArea,"MB"=annMB,"temp"=annT,"precip"=annP)
 print("--------------------MODEL RUN COMPLETE--------------------")
 print(sprintf("Glacier area in year %.0f: %.2f km**2",yrs[ny],annArea[ny]/1e6))
 print("----------------------------------------------------------")

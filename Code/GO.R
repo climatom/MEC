@@ -44,7 +44,9 @@ layer_depth <- 2.0 # m
 # *** 
 
 # # # # # # # # # # # # # # # # # # # # # # # 
-setwd("Data")
+if (!grepl("Data",getwd())){
+  setwd("Data") 
+}
 #setwd("C:/Users/Admin/Documents/MEC/Data/")  # Change this to the absolute 
 # path  *IF* running on your own machine. 
 hyps_name<-paste("stor_hyps.csv",sep="")
@@ -141,7 +143,7 @@ albedo <- function(dtlast,snow_depth){
   
   alb
 }
-  
+
 # SEB
 qsum<-function(tdep,sin,trans,albedo){
   q<-(tdep+(1-albedo)*sin*trans)*secday # NB Joules/day
@@ -241,7 +243,7 @@ for (i in 1:nt){
     tsubiz_last<-tdist(ltm,temp_corr=temp_corr,lapse=tlapse,z)
     tsubiz_last[tsubiz_last>0]<-0
     dtsnowiz_last<-rep(0,ne)
-  
+    
     # Distribute winter balance over the 
     # elevation bands (using regression based on 
     # sample of mean Bw profiles)
@@ -251,7 +253,7 @@ for (i in 1:nt){
     # Set cmb_ann to be the same as the mean winter balance
     cmb_ann<-sum(hyps$area_m2[hyps$area_m2>0]*sdiz_last[hyps$area_m2 > 0])/totArea
   }
-
+  
   # T-dep heat flux
   tdep[i,]<-temp_def(tiz[i,],tip=t_tip,scalar=t_sens,constant=t_constant) 
   
@@ -288,13 +290,13 @@ for (i in 1:nt){
   
   # New sub-surface temp
   tsubiz_last<-tsub(tsubiz_last,riz[i,],qiz[i,])
-
+  
   # Update days since last snow
   dtsnowiz_last<-days_since(snowiz[i,],dtsnowiz_last)
   
   # If today is end of summer (and we're out of spin-up period) 
   if (yday(met$date[i])==243 & met$date[i]>spin_up_end){
-
+    
     # reset tsub to annual mean tiz
     tsubiz_last<-tdist(ltm,temp_corr=temp_corr,lapse=tlapse,z)
     tsubiz_last[tsubiz_last<0]<-0
@@ -302,7 +304,7 @@ for (i in 1:nt){
     # Cache SMB and clear
     annMB[k]<-cmb_ann
     yrs[k]<-year(met$date[i])
-
+    
     # Also adjust glacier area and hypsometry
     dA<-(abs(cmb_ann)*totArea)^(1.0/va) # m^2
     
@@ -313,7 +315,7 @@ for (i in 1:nt){
       
       # Subtract area from lowest bands -- and possibly above 
       while(dA>0){
-
+        
         if (dA>hyps[idx,2]){
           
           resid<-dA-hyps[idx,2]
@@ -335,28 +337,28 @@ for (i in 1:nt){
         break
       }  
       
-      } else {
-        
-        # Add area below lowest band
-        while(dA>0){
+    } else {
       
-          if (hyps[idx,2]+dA>(hyps[(idx+1),2]*max_inc)){ 
+      # Add area below lowest band
+      while(dA>0){
+        
+        if (hyps[idx,2]+dA>(hyps[(idx+1),2]*max_inc)){ 
           
-            resid<-hyps[idx,2]+dA-(hyps[(idx+1),2]*max_inc)
-            hyps[idx,2]<-hyps[(idx+1),2]*max_inc
-            idx<-idx-1
-            dA<-resid*1.0
-            
-          }
-          
-          else {
-            hyps[idx,2]<-hyps[idx,2]+dA
-            dA<-0
-          }
+          resid<-hyps[idx,2]+dA-(hyps[(idx+1),2]*max_inc)
+          hyps[idx,2]<-hyps[(idx+1),2]*max_inc
+          idx<-idx-1
+          dA<-resid*1.0
           
         }
         
+        else {
+          hyps[idx,2]<-hyps[idx,2]+dA
+          dA<-0
+        }
+        
       }
+      
+    }
     
     # Reset cumulative mass balance
     cmb_ann<-0

@@ -33,7 +33,7 @@ hist_stop<-"2010-12-31"
 proj_start<-"1989-03-31"
 spin_up_end<-"1990-08-30"
 proj_end<-"2100-12-31"
-mean_start<-as.Date(spin_up_end) %m-%months(12) +1 # Start date for mean comps
+mean_start<-as.Date(spin_up_end) %m-%months(12) + 2 # Start date for mean comps
 
 # # # # # # # # # # # # # # 
 # File names / Parse input
@@ -368,7 +368,6 @@ for (i in 1:nt){
     annArea[k]<-totArea
     annT[k]<-totT/nd
     annP[k]<-totP/nd 
-    print(nd)
     
     # Increment counter
     k<-k+1

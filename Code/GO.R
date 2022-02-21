@@ -61,6 +61,7 @@ val_name<-paste("AnnMB.csv",sep="")
 #------------------------------------------------------------------------------#
 tlapse<--6.5 # C/km
 plapse<-100 # %/km
+ice_albedo<-0.35 # Dimensionless
 t_sens<-10 # W/m^2/C
 t_constant <--25 #W/m^2
 trans<-0.5 # Transmissivity for insolation, dimensionless

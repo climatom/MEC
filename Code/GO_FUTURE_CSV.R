@@ -23,7 +23,6 @@ cp<-2 # Bias correction for precipitation (scalar [0->inf])
 snow_trans<-1.5 # Precip falls as snow if > this (C)
 snow_albedo<-0.9 # Dimensionless 
 firn_albedo<-0.55 # Dimensionless
-ice_albedo<-0.35 # Dimensionless
 alb_time_scale<-21.9 # Days
 alb_depth_scale<-0.001 # m w.e.
 layer_depth <- 2.0 # m
@@ -65,6 +64,7 @@ totArea<-sum(hyps$area_m2)
 #------------------------------------------------------------------------------#
 tlapse<--6.5 # C/km
 plapse<-100 # %/km
+ice_albedo<-0.35 # Dimensionless
 t_sens<-10 # W/m^2/C
 t_constant <--25 #W/m^2
 trans<-0.2 # Transmissivity for insolation, dimensionless

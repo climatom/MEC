@@ -1,9 +1,9 @@
-# Import relevant module(s)
-library(lubridate) # For easier date-time handling
+library(lubridate)
 library(dplyr)
 
 # # # # # # # # # # # # # # # # # # # # 
 # Constants (or 'hidden' paramaters)
+# DO NOT ADJUST 
 # # # # # # # # # # # # # # # # # # # # 
 c<-2*pi # Radians in circle
 r_mean<-149.6 # average earth-sun distance (million km)
@@ -18,9 +18,6 @@ secday<-60*60*24 # seconds in day
 va<-1.36 # Coefficient in volume-area scaling; treat as a constant here
 max_inc <-1.5 # When glacier is 'growing', insist that area cannot increase by 
 # more than this much between adjacent bands
-start_date <- "1989-03-31" # Start date of simulation
-spin_up_end <- "1990-08-30" # End of spin-up period
-end_date <- "2010-09-01" # End date of simulation
 temp_corr<-0 # Bias correction for temp (C)
 cp<-2 # Bias correction for precipitation (scalar [0->inf])
 snow_trans<-1.5 # Precip falls as snow if > this (C)
@@ -30,30 +27,36 @@ ice_albedo<-0.35 # Dimensionless
 alb_time_scale<-21.9 # Days
 alb_depth_scale<-0.001 # m w.e.
 layer_depth <- 2.0 # m
+future_start<-"2014-12-31"
+hist_start<-"1981-01-01"
+hist_stop<-"2010-12-31"
+proj_start<-"1989-03-31"
+spin_up_end<-"1990-08-30"
+proj_end<-"2100-12-31"
 
 # # # # # # # # # # # # # # 
-# FILENAMES
-# *** 
-# These will need to be adjusted 
-# if the repo is cloned to your
-# local machine -- in which case
-# you should ensure the argument 
-# to setwd (i.e., the bit in brackets)
-# points to the directory holding the 
-# data
-# *** 
-
-# # # # # # # # # # # # # # # # # # # # # # # 
+# File names / Parse input
+# # # # # # # # # # # # # # 
 setwd("Data")
-#setwd("C:/Users/Admin/Documents/MEC/Data/")  # Change this to the absolute 
-# path  *IF* running on your own machine. 
+#setwd("C:/Users/Admin/Documents/MEC/Data/") # Change this to the absolute 
+# path --  e.g., /Users/tommatthews/Documents/MEC/Data *IF* running on your own 
+# machine. 
 hyps_name<-paste("stor_hyps.csv",sep="")
-met_name<-paste("met.csv",sep="")
-val_name<-paste("AnnMB.csv",sep="")
-# # # # # # # # # # # # # # # # # # # # # # # 
+met_name<-paste("projections.csv",sep="")
+
+# Storglaciaren hypsometry: z_m | area_m2
+hyps<-read.csv(hyps_name)
+hyps_old<-hyps
+z<-hyps$z_m
+met_all<-read.csv(met_name)
+met_all$date<-as.Date(met_all$date,format="%Y-%m-%d")
+#z<-z[hyps$area_m2>0]
+ne<-length(z)
+totArea<-sum(hyps$area_m2)
 
 # # # # # # # # # # # # # # 
-# PARAMETERS TO TUNE
+# PARAMETERS TO ** SET **
+# DO CHANGE THESE!! 
 # # # # # # # # # # # # # # 
 #------------------------------------------------------------------------------#
 #------------------------------------------------------------------------------#
@@ -61,7 +64,7 @@ tlapse<--6.5 # C/km
 plapse<-100 # %/km
 t_sens<-10 # W/m^2/C
 t_constant <--25 #W/m^2
-trans<-0.5 # Transmissivity for insolation, dimensionless
+trans<-0.2 # Transmissivity for insolation, dimensionless
 t_tip<-1 # Temp-dep fluxes increase with T above this threshold (C)
 #------------------------------------------------------------------------------#
 #------------------------------------------------------------------------------#
@@ -141,7 +144,7 @@ albedo <- function(dtlast,snow_depth){
   
   alb
 }
-  
+
 # SEB
 qsum<-function(tdep,sin,trans,albedo){
   q<-(tdep+(1-albedo)*sin*trans)*secday # NB Joules/day
@@ -170,30 +173,10 @@ runoff<-function(q,r){
   melt
 }
 
-# # # # # # # # # # # # # #
-# PARSE INPUT
-# # # # # # # # # # # # # #
-
-# Storglaciaren hypsometry: z_m | area_m2
-hyps<-read.csv(hyps_name)
-met<-read.csv(met_name)
-hyps_old<-hyps
-z<-hyps$z_m
-#z<-z[hyps$area_m2>0]
-ne<-length(z)
-totArea<-sum(hyps$area_m2)
-
-# E-OBS met data for Storglaciaren: Date | t (C) | p (mm/day)
-met<-read.csv(met_name)
-met$date<-as.Date(met$date,format="%d/%m/%Y")
-met<-met[(met$date >= start_date) & (met$date <= end_date),]
-nt<-length(met$date)
-ny<-year(end_date)-year(spin_up_end)+1
-date_hourly<-seq(as.POSIXct(met$date[1]), as.POSIXct(met$date[nt]), by="hour")
-nt<-length(met$date)
-
-# Validation
-val<-read.csv(val_name)
+# Prepare output grids
+yrs<-year(met_all$date)
+nt<-length(met_all$date)
+ny<-year(proj_end)-year(spin_up_end)+1
 
 # Prepare intermediate and output grids
 tiz<-matrix(nrow=nt,ncol=ne) # Air T (C) at time i and elevation z
@@ -208,7 +191,9 @@ runoffiz<-matrix(nrow=nt,ncol=ne) # Runoff at time t, elevation z
 mbiz<-matrix(nrow=nt,ncol=ne)# Mass balance at time i, elevation z
 SMB<-matrix(nrow=nt) # Specific MB at time i (m w.e.)
 annMB<-rep(NA,ny) # Annual specific mass balance
-annArea<-rep(NA,ny)
+annArea<-rep(NA,ny) # Area at the end of each year (m**2)
+annT<-rep(NA,ny) # Annual mean air temperature (m**2)
+annP<-rep(NA,ny) # Annual mean precipitation
 yrs<-rep(NA,ny) # Years (useful for subsetting)
 k<-1 # Annual counter
 ref_idx<-seq(length(hyps[,1]))
@@ -218,6 +203,8 @@ ref_idx<-seq(length(hyps[,1]))
 # # # # # # # # # # # # # #
 
 # Compute sin as the toa for the doy in the met df
+date_hourly<-seq(as.POSIXct(met_all$date[1]), as.POSIXct(met_all$date[nt]), 
+                 by="hour")
 doy_hour<-yday(date_hourly)
 hour_hour<-hour(date_hourly)
 toa<-sin_toa(doy=doy_hour,hour=hour_hour,lat=target_lat)
@@ -230,18 +217,22 @@ toa <- toa %>%
   dplyr::summarize(mean = mean(toa))
 
 # Loop time 
+nd<-0
+totT<-0
+totP<-0
+
 for (i in 1:nt){
   
   # Distribute T
-  tiz[i,]<-tdist(met$t[i],temp_corr=temp_corr,lapse=tlapse,z=z)
+  tiz[i,]<-tdist(met_all$t[i],temp_corr=temp_corr,lapse=tlapse,z=z)
   
   # Init on first run
   if (i==1){
-    ltm<-mean(met$t)
+    ltm<-mean(met_all$t[met_all$date<hist_stop]) # Note we use LTM from hist 
     tsubiz_last<-tdist(ltm,temp_corr=temp_corr,lapse=tlapse,z)
     tsubiz_last[tsubiz_last>0]<-0
     dtsnowiz_last<-rep(0,ne)
-  
+    
     # Distribute winter balance over the 
     # elevation bands (using regression based on 
     # sample of mean Bw profiles)
@@ -251,7 +242,7 @@ for (i in 1:nt){
     # Set cmb_ann to be the same as the mean winter balance
     cmb_ann<-sum(hyps$area_m2[hyps$area_m2>0]*sdiz_last[hyps$area_m2 > 0])/totArea
   }
-
+  
   # T-dep heat flux
   tdep[i,]<-temp_def(tiz[i,],tip=t_tip,scalar=t_sens,constant=t_constant) 
   
@@ -268,12 +259,12 @@ for (i in 1:nt){
   runoffiz[i,]<-runoff(qiz[i,],riz[i,])
   
   # Distribute new snowfall
-  snowiz[i,]<-sdist(tiz[i,],p=met$p[i],z=z)
+  snowiz[i,]<-sdist(tiz[i,],p=met_all$p[i],z=z)
   
   # Evaluate SMB at this time step
   mbiz[i,]<-snowiz[i,]-runoffiz[i,]
   
-  # Compute the glacier-wide SMB
+  # Compute the annual SMB
   SMB[i]<-sum(hyps$area_m2[hyps$area_m2>0]*mbiz[i,hyps$area_m2 > 0])/totArea
   
   # Accumulate SMB
@@ -288,21 +279,29 @@ for (i in 1:nt){
   
   # New sub-surface temp
   tsubiz_last<-tsub(tsubiz_last,riz[i,],qiz[i,])
-
+  
   # Update days since last snow
   dtsnowiz_last<-days_since(snowiz[i,],dtsnowiz_last)
   
-  # If today is end of summer (and we're out of spin-up period) 
-  if (yday(met$date[i])==243 & met$date[i]>spin_up_end){
-
+  # Accumulate T and P, plus increment the counters (so long as we're through
+  # the spin-up period)
+  if (met_all$date[i]>=spin_up_end){
+    totT<-totT+met_all$t[i]
+    totP<-totP+met_all$p[i]
+    nd<-nd+1 # Increment number of days here. 
+  }
+  
+  # If today is end of summer (and it's not the spin-up period)
+  if (yday(met_all$date[i])==243 & met_all$date[i]>spin_up_end){
+    
     # reset tsub to annual mean tiz
     tsubiz_last<-tdist(ltm,temp_corr=temp_corr,lapse=tlapse,z)
     tsubiz_last[tsubiz_last<0]<-0
     
     # Cache SMB and clear
     annMB[k]<-cmb_ann
-    yrs[k]<-year(met$date[i])
-
+    yrs[k]<-year(met_all$date[i])
+    
     # Also adjust glacier area and hypsometry
     dA<-(abs(cmb_ann)*totArea)^(1.0/va) # m^2
     
@@ -313,7 +312,7 @@ for (i in 1:nt){
       
       # Subtract area from lowest bands -- and possibly above 
       while(dA>0){
-
+        
         if (dA>hyps[idx,2]){
           
           resid<-dA-hyps[idx,2]
@@ -335,47 +334,53 @@ for (i in 1:nt){
         break
       }  
       
-      } else {
-        
-        # Add area below lowest band
-        while(dA>0){
+    } else {
       
-          if (hyps[idx,2]+dA>(hyps[(idx+1),2]*max_inc)){ 
+      # Add area below lowest band
+      while(dA>0){
+        
+        if (hyps[idx,2]+dA>(hyps[(idx+1),2]*max_inc)){ 
           
-            resid<-hyps[idx,2]+dA-(hyps[(idx+1),2]*max_inc)
-            hyps[idx,2]<-hyps[(idx+1),2]*max_inc
-            idx<-idx-1
-            dA<-resid*1.0
-            
-          }
-          
-          else {
-            hyps[idx,2]<-hyps[idx,2]+dA
-            dA<-0
-          }
+          resid<-hyps[idx,2]+dA-(hyps[(idx+1),2]*max_inc)
+          hyps[idx,2]<-hyps[(idx+1),2]*max_inc
+          idx<-idx-1
+          dA<-resid*1.0
           
         }
         
+        else {
+          hyps[idx,2]<-hyps[idx,2]+dA
+          dA<-0
+        }
+        
       }
+      
+    }
     
     # Reset cumulative mass balance
     cmb_ann<-0
+    
+    # Store annual stats
     totArea<-sum(hyps[,2])
     annArea[k]<-totArea
+    annT[k]<-totT/nd
+    annP[k]<-totP/nd 
     
     # Increment counter
     k<-k+1
     
+    # Reset nd and running counters
+    nd<-0
+    totT<-0
+    totP<-0
+    
+    #Provide update
+    print(sprintf("Year = %.0f, doy = %.0f --> Area = %.2f km**2",
+                  year(met_all$date[i]),yday(met_all$date[i]),totArea/1e6))
+    
   }
 }
 
-# OBS Mass balance
-obs<-val$MBs[val$year>=min(yrs) & val$year<=max(yrs)]
-
 print("--------------------MODEL RUN COMPLETE--------------------")
-# % error in cumulative mass balance - obs and sim
-err_pc<-abs(mean(annMB)-mean(obs))/abs(mean(obs))*100.0
-print(sprintf("Obs mean SMB is %.2f m w.e.",mean(obs)))
-print(sprintf("Sim mean SMB is %.2f m w.e.",mean(annMB)))
-print(sprintf("[Absolute error is %.1f%%]",err_pc))
+print(sprintf("Glacier area in year %.0f: %.2f km**2",yrs[ny],annArea[ny]/1e6))
 print("----------------------------------------------------------")

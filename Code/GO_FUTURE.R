@@ -32,14 +32,15 @@ layer_depth <- 2.0 # m
 future_start<-"2014-12-31"
 hist_start<-"1981-01-01"
 hist_stop<-"2010-12-31"
-proj_start<-"1990-03-31"
-spin_up_end<-"1990-09-01"
+proj_start<-"1989-03-31"
+spin_up_end<-"1990-08-30"
+proj_end<-"2100-12-31"
 
 # # # # # # # # # # # # # # 
 # File names / Parse input
 # # # # # # # # # # # # # # 
-setwd("Data")
-#setwd("/Users/tommatthews/Documents/MEC/MEC/Data") # Change this to the absolute 
+#setwd("Data")
+setwd("C:/Users/Admin/Documents/MEC/Data/") # Change this to the absolute 
 # path --  e.g., /Users/tommatthews/Documents/MEC/Data *IF* running on your own 
 # machine. 
 hyps_name<-paste("stor_hyps.csv",sep="")
@@ -59,7 +60,7 @@ tas_fut_f<-
 # Storglaciaren hypsometry: z_m | area_m2
 hyps<-read.csv(hyps_name)
 hyps_old<-hyps
-z<-hyps$z_m
+z<-hyps$ï..z_m
 met<-read.csv(met_name)
 met$date<-as.Date(met$date,format="%d/%m/%Y")
 #z<-z[hyps$area_m2>0]
@@ -237,7 +238,7 @@ for (m in seq(1,12)){
 met_all<-rbind(met[(met$date>proj_start) & (met$date <= future_start),],met_fut)
 yrs<-year(met_all$date)
 nt<-length(met_all$date)
-ny<-max(year(met_all$date))-min(year(met_all$date))
+ny<-year(proj_end)-year(spin_up_end)+1
 
 # Prepare intermediate and output grids
 tiz<-matrix(nrow=nt,ncol=ne) # Air T (C) at time i and elevation z
@@ -258,10 +259,6 @@ annP<-rep(NA,ny) # Annual mean precipitation
 yrs<-rep(NA,ny) # Years (useful for subsetting)
 k<-1 # Annual counter
 ref_idx<-seq(length(hyps[,1]))
-
-# # # # # # # # # # # # # #
-# MAIN BEGINS
-# # # # # # # # # # # # # #
 
 # Compute sin as the toa for the doy in the met df
 date_hourly<-seq(as.POSIXct(met_all$date[1]), as.POSIXct(met_all$date[nt]), 
@@ -443,5 +440,5 @@ for (i in 1:nt){
 }
 
 print("--------------------MODEL RUN COMPLETE--------------------")
-print(sprintf("Glacier area in year %.0f: %.2f km^2",yrs[ny],annArea[ny]/1e6))
+print(sprintf("Glacier area in year %.0f: %.2f km**2",yrs[ny],annArea[ny]/1e6))
 print("----------------------------------------------------------")

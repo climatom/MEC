@@ -64,11 +64,12 @@ totArea<-sum(hyps$area_m2)
 #------------------------------------------------------------------------------#
 tlapse<--6.5 # C/km
 plapse<-100 # %/km
-ice_albedo<-0.35 # Dimensionless
-t_sens<-10 # W/m^2/C
-t_constant <--25 #W/m^2
-trans<-0.2 # Transmissivity for insolation, dimensionless
-t_tip<-1 # Temp-dep fluxes increase with T above this threshold (C)
+ice_albedo<-0.35 # Dimensionless (alpha_ice)
+t_sens<-10 # W/m^2/C (c)
+t_constant <--25 #W/m^2 (psi_min)
+trans<-0.5 # Transmissivity for insolation, dimensionless (tau)
+t_tip<-1 # Temp-dep fluxes increase with T above this threshold,  C
+#--------------------------------------------------------------------
 #------------------------------------------------------------------------------#
 #------------------------------------------------------------------------------#
 

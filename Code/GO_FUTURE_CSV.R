@@ -19,7 +19,7 @@ va<-1.36 # Coefficient in volume-area scaling; treat as a constant here
 max_inc <-1.5 # When glacier is 'growing', insist that area cannot increase by 
 # more than this much between adjacent bands
 temp_corr<-0 # Bias correction for temp (C)
-cp<-2 # Bias correction for precipitation (scalar [0->inf])
+cp<-3 # Bias correction for precipitation (scalar [0->inf])
 snow_trans<-1.5 # Precip falls as snow if > this (C)
 snow_albedo<-0.9 # Dimensionless 
 firn_albedo<-0.55 # Dimensionless
@@ -62,7 +62,7 @@ totArea<-sum(hyps$area_m2)
 # # # # # # # # # # # # # # 
 #------------------------------------------------------------------------------#
 #------------------------------------------------------------------------------#
-tlapse<--6.5 # C/km
+tlapse<--9.8 # C/km
 plapse<-100 # %/km
 ice_albedo<-0.35 # Dimensionless (alpha_ice)
 t_sens<-10 # W/m^2/C (c)
@@ -388,3 +388,5 @@ annframe<-data.frame("year"=yrs,"area"=annArea,"MB"=annMB,"temp"=annT,"precip"=a
 print("--------------------MODEL RUN COMPLETE--------------------")
 print(sprintf("Glacier area in year %.0f: %.2f km**2",yrs[ny],annArea[ny]/1e6))
 print("----------------------------------------------------------")
+# Write output
+x<-write.csv(annframe,"Results.csv")

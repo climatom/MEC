@@ -22,11 +22,10 @@ start_date <- "1989-03-31" # Start date of simulation
 spin_up_end <- "1990-08-30" # End of spin-up period
 end_date <- "2010-09-01" # End date of simulation
 temp_corr<-0 # Bias correction for temp (C)
-cp<-2 # Bias correction for precipitation (scalar [0->inf])
+cp<-3 # Bias correction for precipitation (scalar [0->inf])
 snow_trans<-1.5 # Precip falls as snow if > this (C)
 snow_albedo<-0.9 # Dimensionless 
 firn_albedo<-0.55 # Dimensionless
-ice_albedo<-0.35 # Dimensionless
 alb_time_scale<-21.9 # Days
 alb_depth_scale<-0.001 # m w.e.
 layer_depth <- 2.0 # m
@@ -59,7 +58,7 @@ val_name<-paste("AnnMB.csv",sep="")
 # # # # # # # # # # # # # # 
 #------------------------------------------------------------------------------#
 #------------------------------------------------------------------------------#
-tlapse<--6.5 # C/km
+tlapse<--9.8 # C/km
 plapse<-100 # %/km
 ice_albedo<-0.35 # Dimensionless (alpha_ice)
 t_sens<-10 # W/m^2/C (c)
@@ -375,10 +374,19 @@ for (i in 1:nt){
 # OBS Mass balance
 obs<-val$MBs[val$year>=min(yrs) & val$year<=max(yrs)]
 
+# Compute the RMSE
+rmse<-(mean((obs-annMB)^2))^0.5
+mae<-mean(abs(obs-annMB))
+meanbias<-mean(annMB)-mean(obs)
+r<-cor(annMB,obs)
+
 print("--------------------MODEL RUN COMPLETE--------------------")
-# % error in cumulative mass balance - obs and sim
+#print(sprintf("RMSE = %.2f m w.e. a^-1",rmse))
+#print(sprintf("R = %.2f m w.e. a^-1",r))
+print(sprintf("MAE = %.2f m w.e. a^-1",mae))
 err_pc<-abs(mean(annMB)-mean(obs))/abs(mean(obs))*100.0
-print(sprintf("Obs mean SMB is %.2f m w.e.",mean(obs)))
-print(sprintf("Sim mean SMB is %.2f m w.e.",mean(annMB)))
-print(sprintf("[Absolute error is %.1f%%]",err_pc))
+print(sprintf("Obs mean SMB is %.2f m w.e. a^-1",mean(obs)))
+print(sprintf("Sim mean SMB is %.2f m w.e. a^-1",mean(annMB)))
+print(sprintf("Mean bias is %.2f m w.e. a^-1",meanbias))
+
 print("----------------------------------------------------------")

@@ -34,26 +34,21 @@ layer_depth <- 2.0 # m
 
 # # # # # # # # # # # # # # 
 # FILENAMES
-# *** 
-# These will need to be adjusted 
-# if the repo is cloned to your
-# local machine -- in which case
-# you should ensure the argument 
-# to setwd (i.e., the bit in brackets)
-# points to the directory holding the 
-# data
-# *** 
+# # # # # # # # # # # # # #
+#------------------------------------------------------------------------------#
+# These will need to be adjusted if the repo is cloned to your
+# local machine -- in which case you should ensure the argument to setwd 
+# (i.e., the bit in brackets) points to the directory holding the data
 
-# # # # # # # # # # # # # # # # # # # # # # # 
-if (!grepl("Data",getwd())){
-  setwd("Data") 
-}
+#if (!grepl("Data",getwd())){
+#  setwd("Data") 
+#}
 setwd("/Users/tommatthews/Documents/MEC/MEC/Data/")  # Change this to the absolute 
 # path  *IF* running on your own machine. 
 hyps_name<-paste("stor_hyps.csv",sep="")
 met_name<-paste("met.csv",sep="")
 val_name<-paste("AnnMB.csv",sep="")
-# # # # # # # # # # # # # # # # # # # # # # # 
+#------------------------------------------------------------------------------#
 
 
 # # # # # # # # # # # # # # 

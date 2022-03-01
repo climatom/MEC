@@ -20,6 +20,8 @@ max_inc <-1.5 # When glacier is 'growing', insist that area cannot increase by
 # more than this much between adjacent bands
 temp_corr<-0 # Bias correction for temp (C)
 cp<-3 # Bias correction for precipitation (scalar [0->inf])
+tlapse<--9.8 # Temperature lapse rate (C/km)
+plapse<-100 # Precipitation lapse rate (%/km)
 snow_trans<-1.5 # Precip falls as snow if > this (C)
 snow_albedo<-0.9 # Dimensionless 
 firn_albedo<-0.55 # Dimensionless
@@ -40,7 +42,7 @@ mean_start<-as.Date(spin_up_end) %m-%months(12) + 2 # Start date for mean comps
 if (!grepl("Data",getwd())){
   setwd("Data") 
 }
-#setwd("C:/Users/Admin/Documents/MEC/Data/") # Change this to the absolute 
+#setwd("/Users/tommatthews/Documents/MEC/MEC/Data/") # Change this to the absolute 
 # path --  e.g., /Users/tommatthews/Documents/MEC/Data *IF* running on your own 
 # machine. 
 hyps_name<-paste("stor_hyps.csv",sep="")
@@ -52,26 +54,21 @@ hyps_old<-hyps
 z<-hyps$z_m
 met_all<-read.csv(met_name)
 met_all$date<-as.Date(met_all$date,format="%Y-%m-%d")
-#z<-z[hyps$area_m2>0]
 ne<-length(z)
 totArea<-sum(hyps$area_m2)
 
 # # # # # # # # # # # # # # 
 # PARAMETERS TO ** SET **
-# DO CHANGE THESE!! 
 # # # # # # # # # # # # # # 
 #------------------------------------------------------------------------------#
-#------------------------------------------------------------------------------#
-tlapse<--9.8 # C/km
-plapse<-100 # %/km
+# CHANGE THESE TO MATCH YOUR "BEST" SET (OBTAINED BY MANUAL TUNING)
 ice_albedo<-0.35 # Dimensionless (alpha_ice)
 t_sens<-10 # W/m^2/C (c)
 t_constant <--25 #W/m^2 (psi_min)
 trans<-0.5 # Transmissivity for insolation, dimensionless (tau)
 t_tip<-1 # Temp-dep fluxes increase with T above this threshold,  C
-#--------------------------------------------------------------------
 #------------------------------------------------------------------------------#
-#------------------------------------------------------------------------------#
+
 
 # # # # # # # # # # # # # # # # # # # # # # # #
 # FUNCTIONS
@@ -306,8 +303,16 @@ for (i in 1:nt){
     annMB[k]<-cmb_ann
     yrs[k]<-year(met_all$date[i])
     
+    # Store the cumulative mass loss (m^3)
+    dV<-cmb_ann*totArea 
+    
+    # If there's more mass to be removed than exists...
+    if (dV < -(totArea^va)) {
+      break # Note that this means we will have no mean met for this year.
+    }
+    
     # Also adjust glacier area and hypsometry
-    dA<-(abs(cmb_ann)*totArea)^(1.0/va) # m^2
+    dA<-abs(dV)^(1.0/va) # m^2
     
     # Identify lowest elevation with glacier area
     idx<-ref_idx[hyps[,1]==min(hyps[hyps[,2]>0,1])]
@@ -386,7 +391,7 @@ for (i in 1:nt){
 }
 annframe<-data.frame("year"=yrs,"area"=annArea,"MB"=annMB,"temp"=annT,"precip"=annP)
 print("--------------------MODEL RUN COMPLETE--------------------")
-print(sprintf("Glacier area in year %.0f: %.2f km**2",yrs[ny],annArea[ny]/1e6))
+print("Output written to Results.csv")
 print("----------------------------------------------------------")
 # Write output
 x<-write.csv(annframe,"Results.csv")

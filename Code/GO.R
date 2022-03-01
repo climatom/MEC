@@ -40,10 +40,10 @@ layer_depth <- 2.0 # m
 # local machine -- in which case you should ensure the argument to setwd 
 # (i.e., the bit in brackets) points to the directory holding the data
 
-#if (!grepl("Data",getwd())){
-#  setwd("Data") 
-#}
-setwd("/Users/tommatthews/Documents/MEC/MEC/Data/")  # Change this to the absolute 
+if (!grepl("Data",getwd())){
+  setwd("Data") 
+}
+#setwd("/Users/tommatthews/Documents/MEC/MEC/Data/")  # Change this to the absolute 
 # path  *IF* running on your own machine. 
 hyps_name<-paste("stor_hyps.csv",sep="")
 met_name<-paste("met.csv",sep="")
@@ -307,17 +307,15 @@ for (i in 1:nt){
     yrs[k]<-year(met$date[i])
     
     # Store the cumulative mass loss (m^3)
-    dV<-min(c(sum(hyps[,2])^va,-cmb_ann*totArea)) #Check we don't remove
-    # more mass than remains in the glacier
+    dV<-cmb_ann*totArea
     
-    # Also adjust glacier area and hypsometry
+    # Also compute how much area must be removed
     dA<-(abs(cmb_ann)*totArea)^(1.0/va) # m^2
     
-    # If dA > glacier area, set area to 0
-    if (cmb_ann < 0 & sum(hyps[,2])<dA){
-      print("Glacier disappeared!")
-      annArea[k]<-0
-      break # Exit this time loop
+    # If there's more mass to be removed than exists...
+    if (dV < -(totArea^va)) {
+      print("...[Note: glacier disappeared]")
+      break 
     }
     
     # Identify lowest elevation with glacier area

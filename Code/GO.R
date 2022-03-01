@@ -23,6 +23,8 @@ spin_up_end <- "1990-08-30" # End of spin-up period
 end_date <- "2010-09-01" # End date of simulation
 temp_corr<-0 # Bias correction for temp (C)
 cp<-3 # Bias correction for precipitation (scalar [0->inf])
+tlapse<--9.8 # Temperature lase rate (C/km)  
+plapse<-100 # Precipitation lapse rate (%/km)
 snow_trans<-1.5 # Precip falls as snow if > this (C)
 snow_albedo<-0.9 # Dimensionless 
 firn_albedo<-0.55 # Dimensionless
@@ -46,26 +48,31 @@ layer_depth <- 2.0 # m
 if (!grepl("Data",getwd())){
   setwd("Data") 
 }
-#setwd("C:/Users/Admin/Documents/MEC/Data/")  # Change this to the absolute 
+setwd("/Users/tommatthews/Documents/MEC/MEC/Data/")  # Change this to the absolute 
 # path  *IF* running on your own machine. 
 hyps_name<-paste("stor_hyps.csv",sep="")
 met_name<-paste("met.csv",sep="")
 val_name<-paste("AnnMB.csv",sep="")
 # # # # # # # # # # # # # # # # # # # # # # # 
 
+
 # # # # # # # # # # # # # # 
 # PARAMETERS TO TUNE
 # # # # # # # # # # # # # # 
 #------------------------------------------------------------------------------#
 #------------------------------------------------------------------------------#
-tlapse<--9.8 # C/km
-plapse<-100 # %/km
+# CHANGE THESE
 ice_albedo<-0.35 # Dimensionless (alpha_ice)
 t_sens<-10 # W/m^2/C (c)
 t_constant <--25 #W/m^2 (psi_min)
 trans<-0.5 # Transmissivity for insolation, dimensionless (tau)
 t_tip<-1 # Temp-dep fluxes increase with T above this threshold,  C
 #------------------------------------------------------------------------------#
+# YOU CAN LEAVE THESE FOR NOW
+# Uncertainty for model evaluation 
+sigma_obs<-0.34
+sigma_mod<-0.34
+sigma_tot<-sqrt(sigma_obs^2+sigma_mod^2)
 #------------------------------------------------------------------------------#
 
 # # # # # # # # # # # # # # # # # # # # # # # #
@@ -181,7 +188,6 @@ hyps<-read.csv(hyps_name)
 met<-read.csv(met_name)
 hyps_old<-hyps
 z<-hyps$z_m
-#z<-z[hyps$area_m2>0]
 ne<-length(z)
 totArea<-sum(hyps$area_m2)
 
@@ -237,7 +243,7 @@ for (i in 1:nt){
   # Distribute T
   tiz[i,]<-tdist(met$t[i],temp_corr=temp_corr,lapse=tlapse,z=z)
   
-  # Init on first run
+  # Init on first time step
   if (i==1){
     ltm<-mean(met$t)
     tsubiz_last<-tdist(ltm,temp_corr=temp_corr,lapse=tlapse,z)
@@ -305,8 +311,19 @@ for (i in 1:nt){
     annMB[k]<-cmb_ann
     yrs[k]<-year(met$date[i])
     
+    # Store the cumulative mass loss (m^3)
+    dV<-min(c(sum(hyps[,2])^va,-cmb_ann*totArea)) #Check we don't remove
+    # more mass than remains in the glacier
+    
     # Also adjust glacier area and hypsometry
     dA<-(abs(cmb_ann)*totArea)^(1.0/va) # m^2
+    
+    # If dA > glacier area, set area to 0
+    if (cmb_ann < 0 & sum(hyps[,2])<dA){
+      print("Glacier disappeared!")
+      annArea[k]<-0
+      break # Exit this time loop
+    }
     
     # Identify lowest elevation with glacier area
     idx<-ref_idx[hyps[,1]==min(hyps[hyps[,2]>0,1])]
@@ -332,10 +349,6 @@ for (i in 1:nt){
         
       }
       
-      if (sum(hyps[,2])==0){
-        print("Glacier disappeared!")
-        break
-      }  
       
     } else {
       
@@ -373,20 +386,10 @@ for (i in 1:nt){
 
 # OBS Mass balance
 obs<-val$MBs[val$year>=min(yrs) & val$year<=max(yrs)]
+error<-max((abs(annMB-obs))/sigma_tot)
 
-# Compute the RMSE
-rmse<-(mean((obs-annMB)^2))^0.5
-mae<-mean(abs(obs-annMB))
-meanbias<-mean(annMB)-mean(obs)
-r<-cor(annMB,obs)
-
-print("--------------------MODEL RUN COMPLETE--------------------")
-#print(sprintf("RMSE = %.2f m w.e. a^-1",rmse))
-#print(sprintf("R = %.2f m w.e. a^-1",r))
-print(sprintf("MAE = %.2f m w.e. a^-1",mae))
-err_pc<-abs(mean(annMB)-mean(obs))/abs(mean(obs))*100.0
-print(sprintf("Obs mean SMB is %.2f m w.e. a^-1",mean(obs)))
-print(sprintf("Sim mean SMB is %.2f m w.e. a^-1",mean(annMB)))
-print(sprintf("Mean bias is %.2f m w.e. a^-1",meanbias))
-
-print("----------------------------------------------------------")
+print("--------------------MODEL RUN COMPLETE----------------------------")
+print(sprintf("Max error = %.2f sigma",error))
+print(sprintf("Mean model = %.2f m w.e.a^-1 | Mean obs = %.2f m w.e.1^-1",
+              mean(annMB),mean(obs)))
+print("--------------------MODEL RUN COMPLETE----------------------------")

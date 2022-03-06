@@ -61,7 +61,7 @@ ice_albedo<-0.35 # Dimensionless (alpha_ice)
 t_sens<-10 # W/m^2/C (c)
 t_constant <--25 #W/m^2 (psi_min)
 trans<-0.5 # Transmissivity for insolation, dimensionless (tau)
-t_tip<-1 # Temp-dep fluxes increase with T above this threshold,  C
+t_tip<-1 # Temp-dep fluxes increase with T above this threshold, C (T_tip)
 #------------------------------------------------------------------------------#
 # YOU CAN LEAVE THESE FOR NOW
 # Uncertainty for model evaluation 
@@ -379,10 +379,13 @@ for (i in 1:nt){
 
 # OBS Mass balance
 obs<-val$MBs[val$year>=min(yrs) & val$year<=max(yrs)]
-error<-max((abs(annMB-obs))/sigma_tot)
+
+# Implausibility
+implaus_values <- (abs(annMB-obs))/sigma_tot
+implaus_max <- max(implaus_values)
 
 print("--------------------MODEL RUN COMPLETE----------------------------")
-print(sprintf("Max error = %.2f sigma",error))
+print(sprintf("Max implausibility = %.2f", implaus_max))
 print(sprintf("Mean model = %.2f m w.e.a^-1 | Mean obs = %.2f m w.e.1^-1",
               mean(annMB),mean(obs)))
 print("--------------------MODEL RUN COMPLETE----------------------------")

@@ -4,7 +4,7 @@ library(dplyr)
 library(lhs)
 
 # # # # # # # # # # # # # # # # # # # # 
-# Constants (or 'hidden' paramaters)
+# Constants (or 'hidden' parameters)
 # # # # # # # # # # # # # # # # # # # # 
 c<-2*pi # Radians in circle
 r_mean<-149.6 # average earth-sun distance (million km)
@@ -53,7 +53,7 @@ val_name<-paste("AnnMB.csv",sep="")
 
 
 # # # # # # # # # # # # # # 
-# PARAMETER ENSEMBLE
+# PERTURBED PARAMETER ENSEMBLE
 # # # # # # # # # # # # # # 
 
 #------------------------------------------------------------------------------#
@@ -75,7 +75,7 @@ ranges <-
        upper = c(0.6,50,-2,0.6,3))
 #------------------------------------------------------------------------------#
 
-### Performance threshold
+### History matching
 # Uncertainty for model evaluation 
 sigma_obs<-0.34
 sigma_mod<-0.34
@@ -244,7 +244,7 @@ annArea<-rep(NA,ny) # Annual area
 ml<-rep(NA,ny) # Annual cumulative mass loss (m^3)
 yrs<-rep(NA,ny) # Years (useful for subsetting)
 ref_idx<-seq(length(hyps[,1]))
-errors<-rep(NA,nsamps)# To store error metric 
+implaus_max<-rep(NA,nsamps)# To store implausibility
 
 
 # Create LHS sample
@@ -367,7 +367,7 @@ for (samp in 1:nsamps){
       
       # Store the cumulative mass loss (m^3)
       dV<-cmb_ann*totArea
-
+      
       # Also compute how much area must be removed
       dA<-(abs(cmb_ann)*totArea)^(1.0/va) # m^2
       
@@ -376,7 +376,7 @@ for (samp in 1:nsamps){
         print("...[Note: glacier disappeared]")
         break 
       }
-
+      
       # Identify lowest elevation with glacier area
       idx<-ref_idx[hyps[,1]==min(hyps[hyps[,2]>0,1])]
       
@@ -436,11 +436,11 @@ for (samp in 1:nsamps){
     }
   }
   
-  # Compute error (in units of sigma_tot)
-  errors[samp]<-max((abs(annMB-obs))/sigma_tot)
+  # Compute implausibility
+  implaus_max[samp]<-max((abs(annMB-obs))/sigma_tot)
 }
-passed<-data.frame(ens_params[errors<=3,])
+passed<-data.frame(ens_params[implaus_max<3,])
 write.csv(passed,"LHS_params.csv")
 print("--------------------MODEL RUNS COMPLETE--------------------")
-print("Credible paramater sets written to LHS_params.csv")
+print("Credible parameter sets written to LHS_params.csv")
 print("----------------------------------------------------------")

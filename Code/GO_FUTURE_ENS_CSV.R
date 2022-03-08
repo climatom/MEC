@@ -39,10 +39,10 @@ mean_start<-as.Date(spin_up_end) %m-%months(12) + 2 # Start date for mean comps
 # # # # # # # # # # # # # # 
 # File names / Parse input
 # # # # # # # # # # # # # # 
-#if (!grepl("Data",getwd())){
-#  setwd("Data") 
-#}
-setwd("/Users/tommatthews/Documents/MEC/MEC/Data/") # Change this to the absolute 
+if (!grepl("Data",getwd())){
+  setwd("Data") 
+}
+#setwd("/Users/tommatthews/Documents/MEC/MEC/Data/") # Change this to the absolute 
 # path --  e.g., /Users/tommatthews/Documents/MEC/Data *IF* running on your own 
 # machine. 
 hyps_name<-paste("stor_hyps.csv",sep="")
